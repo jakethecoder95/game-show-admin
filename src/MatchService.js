@@ -45,6 +45,20 @@ class MatchService {
       }
     });
   }
+
+  static startNewGame(newGameName) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const res = await axios.post(url + "new-game", {
+          name: newGameName
+        });
+        const data = res.data;
+        resolve(data);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
 }
 
 export default MatchService;

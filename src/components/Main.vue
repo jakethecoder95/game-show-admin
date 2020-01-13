@@ -2,17 +2,14 @@
   <div>
     <h1>{{ match.games[match.gamesPlayed] }}</h1>
 
-    <ul v-if="selected === -1">
+    <ul v-if="selected === -1 && !selectingNewGame">
       <li v-for="(team, index) in match.teams" v-bind:key="team._id">
-        <TeamButton
-          v-bind:team="team"
-          v-bind:teamIndex="index"
-          v-bind:onSelect="onSelect"
-        />
+        <TeamButton v-bind:team="team" v-bind:teamIndex="index" v-bind:onSelect="onSelect" />
       </li>
+      <button class="back-btn" v-on:click="() => onSelectingNewGameChange(true)">New Game</button>
     </ul>
 
-    <div v-if="selected >= 0">
+    <div v-if="selected >= 0 && !selectingNewGame">
       <h2>Editing: {{ match.teams[selected].name }}</h2>
       <AmountSelector
         v-bind:team="match.teams[selected]"
@@ -26,34 +23,44 @@
       />
       <button class="back-btn" v-on:click="selected = -1">Back</button>
     </div>
+
+    <div v-if="selectingNewGame">
+      <NewGameSelectPage v-bind:finishSelecting="() => onSelectingNewGameChange(false)" />
+    </div>
   </div>
 </template>
 
 <script>
 import openSocket from "socket.io-client";
 
-import TeamButton from "./TeamButton";
 import AmountSelector from "./AmountSelector";
-import UpdateTeamName from "./UpdateTeamName";
 import MatchService from "../MatchService";
+import NewGameSelectPage from "./NewGameSelectPage";
+import TeamButton from "./TeamButton";
+import UpdateTeamName from "./UpdateTeamName";
 
 export default {
   name: "HelloWorld",
   components: {
     AmountSelector,
     TeamButton,
-    UpdateTeamName
+    UpdateTeamName,
+    NewGameSelectPage
   },
   data: function() {
     return {
       match: {},
       selected: -1,
+      selectingNewGame: false,
       error: ""
     };
   },
   methods: {
     onSelect(teamIndex) {
       this.selected = teamIndex;
+    },
+    onSelectingNewGameChange(bool) {
+      this.selectingNewGame = bool;
     }
   },
   async created() {
@@ -68,9 +75,13 @@ export default {
           this.match.teams[teamIndex].gameScore = gameScore;
           this.match.teams[teamIndex].totalScore = totalScore;
         }
-        if (action == "updateTeamName") {
+        if (action === "updateTeamName") {
           const { name } = data.team;
           this.match.teams[teamIndex].name = name;
+        }
+        if (action === "newGame") {
+          const { updatedMatch } = data;
+          this.match = { ...updatedMatch };
         }
       });
     } catch (err) {
@@ -102,5 +113,6 @@ li {
   border-color: white;
   font-size: 1.5em;
   margin-top: 40px;
+  padding: 10px 20px;
 }
 </style>
