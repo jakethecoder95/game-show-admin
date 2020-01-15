@@ -85,7 +85,10 @@ export default {
       const phraseArr = this.match.wheelOfBlessings.phrases[
         this.match.wheelOfBlessings.phrasesPlayed
       ].phrase.split("");
-      return phraseArr.reduce((cnt, l) => cnt + (l === letter), 0);
+      return phraseArr.reduce(
+        (cnt, l) => cnt + (l.toLowerCase() === letter.toLowerCase()),
+        0
+      );
     }
   },
   async created() {
