@@ -27,4 +27,7 @@ body {
   text-align: center;
   color: #ffc90e;
 }
+.text-danger {
+  color: red;
+}
 </style>

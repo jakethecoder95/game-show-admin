@@ -3,10 +3,12 @@
     <h1>{{ match.games[match.gamesPlayed] }}</h1>
 
     <ul v-if="selected === -1 && !selectingNewGame">
+      <AddPhrase />
       <li v-for="(team, index) in match.teams" v-bind:key="team._id">
         <TeamButton v-bind:team="team" v-bind:teamIndex="index" v-bind:onSelect="onSelect" />
       </li>
-      <button class="back-btn" v-on:click="() => onSelectingNewGameChange(true)">New Game</button>
+      <NextPhraseBtn v-if="match.games[match.gamesPlayed] === 'WHEEL OF BLESSINGS'" />
+      <button class="standard-btn" v-on:click="() => onSelectingNewGameChange(true)">New Game</button>
     </ul>
 
     <div v-if="selected >= 0 && !selectingNewGame">
@@ -15,17 +17,30 @@
         v-bind:team="match.teams[selected]"
         v-bind:onSubmit="onSelect"
         v-bind:teamIndex="selected"
+        v-bind:isWheelOfBlessings="match.games[match.gamesPlayed] !== 'WHEEL OF BLESSINGS'"
       />
       <UpdateTeamName
+        v-if="match.games[match.gamesPlayed] !== 'WHEEL OF BLESSINGS'"
         v-bind:team="match.teams[selected]"
         v-bind:onSubmit="onSelect"
         v-bind:teamIndex="selected"
       />
-      <button class="back-btn" v-on:click="selected = -1">Back</button>
+      <button class="standard-btn" v-on:click="selected = -1">Back</button>
     </div>
 
     <div v-if="selectingNewGame">
       <NewGameSelectPage v-bind:finishSelecting="() => onSelectingNewGameChange(false)" />
+    </div>
+
+    <div v-if="match.games[match.gamesPlayed] === 'WHEEL OF BLESSINGS'">
+      <h3>
+        Letters Guessed:
+        <span
+          v-for="(letter, i) in match.wheelOfBlessings.guessedLetters"
+          v-bind:key="i"
+        >{{ letter }}:{{ getLetterOccurrences(letter) }},&nbsp;</span>
+      </h3>
+      <h3>Current Prase: {{match.wheelOfBlessings.phrases[match.wheelOfBlessings.phrasesPlayed].phrase}}</h3>
     </div>
   </div>
 </template>
@@ -33,19 +48,23 @@
 <script>
 import openSocket from "socket.io-client";
 
+import AddPhrase from "./WheelOfBlessings/AddPhrase";
 import AmountSelector from "./AmountSelector";
 import MatchService from "../MatchService";
 import NewGameSelectPage from "./NewGameSelectPage";
+import NextPhraseBtn from "./WheelOfBlessings/NextPhraseBtn";
 import TeamButton from "./TeamButton";
 import UpdateTeamName from "./UpdateTeamName";
 
 export default {
-  name: "HelloWorld",
+  name: "Main",
   components: {
+    AddPhrase,
     AmountSelector,
     TeamButton,
-    UpdateTeamName,
-    NewGameSelectPage
+    NewGameSelectPage,
+    NextPhraseBtn,
+    UpdateTeamName
   },
   data: function() {
     return {
@@ -61,6 +80,12 @@ export default {
     },
     onSelectingNewGameChange(bool) {
       this.selectingNewGame = bool;
+    },
+    getLetterOccurrences(letter) {
+      const phraseArr = this.match.wheelOfBlessings.phrases[
+        this.match.wheelOfBlessings.phrasesPlayed
+      ].phrase.split("");
+      return phraseArr.reduce((cnt, l) => cnt + (l === letter), 0);
     }
   },
   async created() {
@@ -82,6 +107,21 @@ export default {
         if (action === "newGame") {
           const { updatedMatch } = data;
           this.match = { ...updatedMatch };
+        }
+      });
+      socket.on("wheelOfBlessings", data => {
+        const { action } = data;
+        if (action === "addPhrase") {
+          const { newPhrase } = data;
+          this.match.wheelOfBlessings.phrases.push(newPhrase);
+        }
+        if (action === "addLetter") {
+          const { newLetter } = data;
+          this.match.wheelOfBlessings.guessedLetters.push(newLetter);
+        }
+        if (action === "nextPhrase") {
+          this.match.wheelOfBlessings.guessedLetters = [];
+          this.match.wheelOfBlessings.phrasesPlayed++;
         }
       });
     } catch (err) {
@@ -107,7 +147,7 @@ li {
   list-style: none;
   margin-bottom: 20px;
 }
-.back-btn {
+.standard-btn {
   color: white;
   background: none;
   border-color: white;

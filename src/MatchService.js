@@ -1,7 +1,9 @@
 import axios from "axios";
 
 const url = "https://game-show.herokuapp.com/match/";
+const blessingsURL = "https://game-show.herokuapp.com/blessings/";
 // const url = "http://localhost:8000/match/";
+// const blessingsURL = "http://localhost:8000/blessings/";
 
 class MatchService {
   static getMatch() {
@@ -52,6 +54,47 @@ class MatchService {
         const res = await axios.post(url + "new-game", {
           name: newGameName
         });
+        const data = res.data;
+        resolve(data);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  static addPhrase(newPhrase, catagory) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const res = await axios.post(blessingsURL + "add-phrase", {
+          newPhrase,
+          catagory
+        });
+        const data = res.data;
+        resolve(data);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  static addLetter(newLetter) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const res = await axios.post(blessingsURL + "add-letter", {
+          newLetter
+        });
+        const data = res.data;
+        resolve(data);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  static nextPhrase() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const res = await axios.post(blessingsURL + "next-phrase");
         const data = res.data;
         resolve(data);
       } catch (err) {
