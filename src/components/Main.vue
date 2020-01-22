@@ -3,7 +3,11 @@
     <h1>{{ match.games[match.gamesPlayed] }}</h1>
 
     <ul v-if="selected === -1 && !selectingNewGame">
-      <AddPhrase />
+      <AddPhrase v-if="match.games[match.gamesPlayed] === 'WHEEL OF BLESSINGS'" />
+      <PressYourLuckActionBtns
+        v-if="match.games[match.gamesPlayed] === 'Press Your Luck'"
+        v-bind:pressYourLuck="match.pressYourLuck"
+      />
       <li v-for="(team, index) in match.teams" v-bind:key="team._id">
         <TeamButton v-bind:team="team" v-bind:teamIndex="index" v-bind:onSelect="onSelect" />
       </li>
@@ -18,6 +22,11 @@
         v-bind:onSubmit="onSelect"
         v-bind:teamIndex="selected"
         v-bind:isWheelOfBlessings="match.games[match.gamesPlayed] !== 'WHEEL OF BLESSINGS'"
+      />
+      <EditSpins
+        v-if="match.games[match.gamesPlayed] === 'Press Your Luck'"
+        v-bind:onSubmit="onSelect"
+        v-bind:teamIndex="selected"
       />
       <UpdateTeamName
         v-if="match.games[match.gamesPlayed] !== 'WHEEL OF BLESSINGS'"
@@ -50,9 +59,11 @@ import openSocket from "socket.io-client";
 
 import AddPhrase from "./WheelOfBlessings/AddPhrase";
 import AmountSelector from "./AmountSelector";
+import EditSpins from "./PressYourLuck/EditSpins";
 import MatchService from "../MatchService";
 import NewGameSelectPage from "./NewGameSelectPage";
 import NextPhraseBtn from "./WheelOfBlessings/NextPhraseBtn";
+import PressYourLuckActionBtns from "./PressYourLuck/PressYourLuckActionBtns";
 import TeamButton from "./TeamButton";
 import UpdateTeamName from "./UpdateTeamName";
 
@@ -61,9 +72,11 @@ export default {
   components: {
     AddPhrase,
     AmountSelector,
-    TeamButton,
+    EditSpins,
+    PressYourLuckActionBtns,
     NewGameSelectPage,
     NextPhraseBtn,
+    TeamButton,
     UpdateTeamName
   },
   data: function() {
@@ -125,6 +138,23 @@ export default {
         if (action === "nextPhrase") {
           this.match.wheelOfBlessings.guessedLetters = [];
           this.match.wheelOfBlessings.phrasesPlayed++;
+        }
+      });
+      socket.on("pressYourLuck", data => {
+        const { action } = data;
+        if (action === "start") {
+          const { spins } = data;
+          this.match.pressYourLuck.teams[
+            this.match.pressYourLuck.activeTeam
+          ].spins = spins;
+          this.match.pressYourLuck.shuffling = true;
+        }
+        if (action === "stop") {
+          this.match.pressYourLuck.shuffling = false;
+        }
+        if (action === "generalUpdate") {
+          const { pressYourLuck } = data;
+          this.match.pressYourLuck = pressYourLuck;
         }
       });
     } catch (err) {
