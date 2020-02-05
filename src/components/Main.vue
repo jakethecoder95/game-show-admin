@@ -8,6 +8,9 @@
         v-if="match.games[match.gamesPlayed] === 'Press Your Luck'"
         v-bind:pressYourLuck="match.pressYourLuck"
       />
+      <MillionaireControls
+        v-if="match.games[match.gamesPlayed] === 'Who Wants To Be A Millionaire'"
+      />
       <li v-for="(team, index) in match.teams" v-bind:key="team._id">
         <TeamButton v-bind:team="team" v-bind:teamIndex="index" v-bind:onSelect="onSelect" />
       </li>
@@ -61,6 +64,7 @@ import AddPhrase from "./WheelOfBlessings/AddPhrase";
 import AmountSelector from "./AmountSelector";
 import EditSpins from "./PressYourLuck/EditSpins";
 import MatchService from "../MatchService";
+import MillionaireControls from "./MillionaireControls/MillionaireControls";
 import NewGameSelectPage from "./NewGameSelectPage";
 import NextPhraseBtn from "./WheelOfBlessings/NextPhraseBtn";
 import PressYourLuckActionBtns from "./PressYourLuck/PressYourLuckActionBtns";
@@ -74,6 +78,7 @@ export default {
     AmountSelector,
     EditSpins,
     PressYourLuckActionBtns,
+    MillionaireControls,
     NewGameSelectPage,
     NextPhraseBtn,
     TeamButton,
@@ -107,8 +112,11 @@ export default {
   async created() {
     try {
       this.match = await MatchService.getMatch();
-      const socket = openSocket("https://game-show.herokuapp.com");
-      // const socket = openSocket("http://localhost:8000");
+      const socket = openSocket(
+        /localhost/.test(location.href)
+          ? "http://localhost:8000/"
+          : "https://game-show.herokuapp.com/"
+      );
       socket.on("match", data => {
         const { action, teamIndex } = data;
         if (action === "updateTeamScore") {

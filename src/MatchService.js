@@ -1,18 +1,19 @@
 import axios from "axios";
 
-const url = "https://game-show.herokuapp.com/match/";
-const blessingsURL = "https://game-show.herokuapp.com/blessings/";
-const pressYourLuckURL = "https://game-show.herokuapp.com/press-your-luck/";
+const url = /localhost/.test(location.href)
+  ? "http://localhost:8000/"
+  : "https://game-show.herokuapp.com/";
 
-// const url = "http://localhost:8000/match/";
-// const blessingsURL = "http://localhost:8000/blessings/";
-// const pressYourLuckURL = "http://localhost:8000/press-your-luck/";
+const matchURL = url + "match/";
+const blessingsURL = url + "blessings/";
+const pressYourLuckURL = url + "press-your-luck/";
+const millionaireURL = url + "millionaire/";
 
 class MatchService {
   static getMatch() {
     return new Promise(async (resolve, reject) => {
       try {
-        const res = await axios.get(url);
+        const res = await axios.get(matchURL);
         const data = res.data;
         resolve(data);
       } catch (err) {
@@ -24,7 +25,7 @@ class MatchService {
   static updateScore(amount, teamIndex) {
     return new Promise(async (resolve, reject) => {
       try {
-        const res = await axios.post(url + "update-score", {
+        const res = await axios.post(matchURL + "update-score", {
           amount,
           teamIndex
         });
@@ -39,7 +40,7 @@ class MatchService {
   static updateTeamName(name, teamIndex) {
     return new Promise(async (resolve, reject) => {
       try {
-        const res = await axios.post(url + "update-team-name", {
+        const res = await axios.post(matchURL + "update-team-name", {
           name,
           teamIndex
         });
@@ -54,7 +55,7 @@ class MatchService {
   static startNewGame(newGameName) {
     return new Promise(async (resolve, reject) => {
       try {
-        const res = await axios.post(url + "new-game", {
+        const res = await axios.post(matchURL + "new-game", {
           name: newGameName
         });
         const data = res.data;
@@ -150,6 +151,69 @@ class MatchService {
       try {
         const res = await axios.post(pressYourLuckURL + "set-active-team", {
           teamIndex
+        });
+        const data = res.data;
+        resolve(data);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  static submitAnswer(answer) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const res = await axios.post(millionaireURL + "submit-answer", {
+          answer
+        });
+        const data = res.data;
+        resolve(data);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  static nextQuestion() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const res = await axios.post(millionaireURL + "next-question");
+        const data = res.data;
+        resolve(data);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  static nextTeam() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const res = await axios.post(millionaireURL + "next-team");
+        const data = res.data;
+        resolve(data);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  static toggleMillionaireTimer() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const res = await axios.post(millionaireURL + "toggle-timer");
+        const data = res.data;
+        resolve(data);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+  static helpOptionSelect(option) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const res = await axios.post(millionaireURL + "help-option-select", {
+          option
         });
         const data = res.data;
         resolve(data);
